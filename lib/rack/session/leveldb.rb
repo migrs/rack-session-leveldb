@@ -96,7 +96,7 @@ module Rack
         @pool.delete(_key(sid))
       end
 
-      def _exists(sid)
+      def _exists?(sid)
         @pool.exists?(_key(sid))
       end
 
