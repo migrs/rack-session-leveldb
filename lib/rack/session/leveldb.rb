@@ -9,13 +9,23 @@ module Rack
 
       DEFAULT_OPTIONS = Abstract::ID::DEFAULT_OPTIONS.merge \
         :namespace => 'rack.session:',
-        :db_path  => "#{ENV['TMP'] || '/tmp'}/rack.session-leveldb",
+        :db_path  => "#{ENV['TMP'] || '/tmp'}/rack.session",
         :cleanup => true
 
       def initialize(app, options={})
         options = {:db_path => options } if options.is_a? String
+        options = {:cache   => options } if options.is_a? ::LevelDB::DB
         super
-        @pool = ::LevelDB::DB.new @default_options[:db_path]
+        if options[:cache]
+          if options[:cache].kind_of? ::LevelDB::DB
+            @pool = options[:cache]
+          else
+            raise ":cache is not LevelDB"
+          end
+        else
+          @pool = ::LevelDB::DB.new @default_options[:db_path]
+        end
+
         cleanup_expired if @default_options[:cleanup]
         @mutex = Mutex.new
       end

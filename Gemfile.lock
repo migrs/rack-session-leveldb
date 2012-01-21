@@ -1,0 +1,18 @@
+PATH
+  remote: .
+  specs:
+    rack-session-leveldb (0.0.1)
+      leveldb-ruby
+      rack
+
+GEM
+  remote: http://rubygems.org/
+  specs:
+    leveldb-ruby (0.10)
+    rack (1.4.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  rack-session-leveldb!
