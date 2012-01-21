@@ -8,6 +8,7 @@ PATH
 GEM
   remote: http://rubygems.org/
   specs:
+    bacon (1.1.0)
     leveldb-ruby (0.10)
     rack (1.4.0)
 
@@ -15,4 +16,5 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  bacon
   rack-session-leveldb!
