@@ -33,7 +33,7 @@ module Rack
       def generate_sid
         loop do
           sid = super
-          break sid unless @pool.exists? sid
+          break sid unless _exists? sid
         end
       end
 
@@ -85,15 +85,23 @@ module Rack
 
     private
       def _put(sid, session)
-        @pool.put("#{@default_options[:namespace]}#{sid}", Marshal.dump({:data => session, :datetime => Time.now}))
+        @pool.put(_key(sid), Marshal.dump({:data => session, :datetime => Time.now}))
       end
 
       def _get(sid)
-        Marshal.load(@pool.get("#{@default_options[:namespace]}#{sid}"))[:data] rescue nil
+        Marshal.load(@pool.get(_key(sid)))[:data] rescue nil
       end
 
       def _delete(sid)
-        @pool.delete("#{@default_options[:namespace]}#{sid}")
+        @pool.delete(_key(sid))
+      end
+
+      def _exists(sid)
+        @pool.exists?(_key(sid))
+      end
+
+      def _key(sid)
+        "#{@default_options[:namespace]}#{sid}"
       end
     end
   end
