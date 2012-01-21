@@ -1,11 +1,10 @@
 require 'thread'
 require 'rack/mock'
 require 'rack/session/leveldb'
+require 'fileutils'
 
-TargetPool = Rack::Session::LevelDB
-
-describe TargetPool do
-  session_key = TargetPool::DEFAULT_OPTIONS[:key]
+describe Rack::Session::LevelDB do
+  session_key = Rack::Session::LevelDB::DEFAULT_OPTIONS[:key]
   session_match = /#{session_key}=[0-9a-fA-F]+;/
 
   incrementor = lambda do |env|
@@ -39,19 +38,25 @@ describe TargetPool do
 
   before do
     # clear all data
-    pool = TargetPool.new(proc{})
+
+    Rack::Session::LevelDB::DEFAULT_OPTIONS[:db_path] = "#{ENV['TMP'] || '/tmp'}/rack.session-#{rand}"
+    pool = Rack::Session::LevelDB.new(proc{})
     pool.pool.each { |k,v| pool.pool.delete(k) }
   end
 
+  after do
+    FileUtils.rm_r(Rack::Session::LevelDB::DEFAULT_OPTIONS[:db_path])
+  end
+
   it "creates a new cookie" do
-    pool = TargetPool.new(incrementor)
+    pool = Rack::Session::LevelDB.new(incrementor)
     res = Rack::MockRequest.new(pool).get("/")
     res["Set-Cookie"].should.match session_match
     res.body.should.equal '{"counter"=>1}'
   end
 
   it "determines session from a cookie" do
-    pool = TargetPool.new(incrementor)
+    pool = Rack::Session::LevelDB.new(incrementor)
     req = Rack::MockRequest.new(pool)
     cookie = req.get("/")["Set-Cookie"]
     req.get("/", "HTTP_COOKIE" => cookie).
@@ -61,14 +66,14 @@ describe TargetPool do
   end
 
   it "survives nonexistant cookies" do
-    pool = TargetPool.new(incrementor)
+    pool = Rack::Session::LevelDB.new(incrementor)
     res = Rack::MockRequest.new(pool).
       get("/", "HTTP_COOKIE" => "#{session_key}=blarghfasel")
     res.body.should.equal '{"counter"=>1}'
   end
 
   it "does not send the same session id if it did not change" do
-    pool = TargetPool.new(incrementor)
+    pool = Rack::Session::LevelDB.new(incrementor)
     req = Rack::MockRequest.new(pool)
 
     res0 = req.get("/")
@@ -88,7 +93,7 @@ describe TargetPool do
   end
 
   it "deletes cookies with :drop option" do
-    pool = TargetPool.new(incrementor)
+    pool = Rack::Session::LevelDB.new(incrementor)
     req = Rack::MockRequest.new(pool)
     drop = Rack::Utils::Context.new(pool, drop_session)
     dreq = Rack::MockRequest.new(drop)
@@ -110,7 +115,7 @@ describe TargetPool do
   end
 
   it "provides new session id with :renew option" do
-    pool = TargetPool.new(incrementor)
+    pool = Rack::Session::LevelDB.new(incrementor)
     req = Rack::MockRequest.new(pool)
     renew = Rack::Utils::Context.new(pool, renew_session)
     rreq = Rack::MockRequest.new(renew)
@@ -137,7 +142,7 @@ describe TargetPool do
   end
 
   it "omits cookie with :defer option" do
-    pool = TargetPool.new(incrementor)
+    pool = Rack::Session::LevelDB.new(incrementor)
     defer = Rack::Utils::Context.new(pool, defer_session)
     dreq = Rack::MockRequest.new(defer)
 
@@ -155,7 +160,7 @@ describe TargetPool do
     end
 
     warn 'Running multithread tests for Session::LevelDB'
-    pool = TargetPool.new(incrementor)
+    pool = Rack::Session::LevelDB.new(incrementor)
     req = Rack::MockRequest.new(pool)
 
     res = req.get('/')
@@ -189,25 +194,25 @@ describe TargetPool do
   end
 
   it "does not return a cookie if cookie was not read/written" do
-    app = TargetPool.new(nothing)
+    app = Rack::Session::LevelDB.new(nothing)
     res = Rack::MockRequest.new(app).get("/")
     res["Set-Cookie"].should.be.nil
   end
 
   it "does not return a cookie if cookie was not written (only read)" do
-    app = TargetPool.new(session_id)
+    app = Rack::Session::LevelDB.new(session_id)
     res = Rack::MockRequest.new(app).get("/")
     res["Set-Cookie"].should.be.nil
   end
 
   it "returns even if not read/written if :expire_after is set" do
-    app = TargetPool.new(nothing, :expire_after => 3600)
+    app = Rack::Session::LevelDB.new(nothing, :expire_after => 3600)
     res = Rack::MockRequest.new(app).get("/", 'rack.session' => {'not' => 'empty'})
     res["Set-Cookie"].should.not.be.nil
   end
 
   it "returns no cookie if no data was written and no session was created previously, even if :expire_after is set" do
-    app = TargetPool.new(nothing, :expire_after => 3600)
+    app = Rack::Session::LevelDB.new(nothing, :expire_after => 3600)
     res = Rack::MockRequest.new(app).get("/")
     res["Set-Cookie"].should.be.nil
   end
