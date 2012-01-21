@@ -3,11 +3,13 @@ require 'leveldb'
 module Rack
   module Session
     class LevelDB < Abstract::ID
+      VERSION = '0.0.1'
+
       attr_reader :mutex, :pool
 
       DEFAULT_OPTIONS = Abstract::ID::DEFAULT_OPTIONS.merge \
         :namespace => 'rack.session:',
-        :db_path  => '/tmp/rack.session-leveldb',
+        :db_path  => "#{ENV['TMP'] || '/tmp'}/rack.session-leveldb",
         :cleanup => true
 
       def initialize(app, options={})
