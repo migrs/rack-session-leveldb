@@ -37,11 +37,7 @@ describe Rack::Session::LevelDB do
   end
 
   before do
-    # clear all data
-
     Rack::Session::LevelDB::DEFAULT_OPTIONS[:db_path] = "#{ENV['TMP'] || '/tmp'}/rack.session-#{rand}"
-    pool = Rack::Session::LevelDB.new(proc{})
-    pool.pool.each { |k,v| pool.pool.delete(k) }
   end
 
   after do
