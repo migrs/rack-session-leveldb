@@ -41,7 +41,9 @@ describe Rack::Session::LevelDB do
   end
 
   after do
-    FileUtils.rm_r(Rack::Session::LevelDB::DEFAULT_OPTIONS[:db_path])
+    if File.directory?(dir = Rack::Session::LevelDB::DEFAULT_OPTIONS[:db_path])
+      FileUtils.rm_r(dir)
+    end
   end
 
   it "creates a new cookie" do

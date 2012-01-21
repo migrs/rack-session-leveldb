@@ -6,7 +6,6 @@ Rack session store for LevelDB
 <http://github.com/migrs/rack-session-leveldb>
 
 [![Build Status](https://secure.travis-ci.org/migrs/rack-session-leveldb.png)](http://travis-ci.org/migrs/rack-session-leveldb)
-[![Dependency Status](https://gemnasium.com/migrs/rack-session-leveldb.png?travis)](https://gemnasium.com/migrs/rack-session-leveldb)
 [![Still Maintained](http://stillmaintained.com/migrs/rack-session-leveldb.png)](http://stillmaintained.com/migrs/rack-session-leveldb)
 
 ## Installation
