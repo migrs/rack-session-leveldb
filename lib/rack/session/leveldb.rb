@@ -7,11 +7,14 @@ module Rack
 
       DEFAULT_OPTIONS = Abstract::ID::DEFAULT_OPTIONS.merge \
         :namespace => 'rack.session:',
-        :db_path  => '/tmp/rack.session-leveldb'
+        :db_path  => '/tmp/rack.session-leveldb',
+        :cleanup => true
 
       def initialize(app, options={})
+        options = {:db_path => options } if options.is_a? String
         super
         @pool = ::LevelDB::DB.new @default_options[:db_path]
+        cleanup_expired if @default_options[:cleanup]
         @mutex = Mutex.new
       end
 
@@ -50,20 +53,31 @@ module Rack
         @mutex.lock if env['rack.multithread']
         yield
       rescue
-        warn "#{self} is unable to find memcached server."
+        warn "#{self} is unable to open #{@default_options[:db_path]}."
         warn $!.inspect
         default
       ensure
         @mutex.unlock if @mutex.locked?
       end
 
+
+      def cleanup_expired(time = Time.now)
+        return unless @default_options[:expire_after]
+        @pool.each do |k, v|
+          if k.start_with?(@default_options[:namespace]) and
+              time - Marshal.load(v)[:datetime] > @default_options[:expire_after]
+            @pool.delete(k)
+          end
+        end
+      end
+
     private
       def _put(sid, session)
-        @pool.put("#{@default_options[:namespace]}#{sid}", Marshal.dump(session))
+        @pool.put("#{@default_options[:namespace]}#{sid}", Marshal.dump({:data => session, :datetime => Time.now}))
       end
 
       def _get(sid)
-        Marshal.load(@pool.get("#{@default_options[:namespace]}#{sid}")) rescue nil
+        Marshal.load(@pool.get("#{@default_options[:namespace]}#{sid}"))[:data] rescue nil
       end
 
       def _delete(sid)
