@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 $:.push File.expand_path("../lib", __FILE__)
-require "rack-session-leveldb"
+require "rack-session-leveldb/version"
 
 Gem::Specification.new do |s|
   s.name        = "rack-session-leveldb"

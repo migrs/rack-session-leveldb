@@ -43,4 +43,10 @@ Set LevelDB instance with some config
       :expire_after => 600
     }
 
+## About LevelDB
 
+- <http://code.google.com/p/leveldb/>
+- <https://github.com/wmorgan/leveldb-ruby>
+
+## License
+[rack-session-leveldb](http://github.com/migrs/rack-session-leveldb) is Copyright (c) 2012 [Masato Igarashi](http://github.com/migrs)(@[migrs](http://twitter.com/migrs)) and distributed under the [MIT license](http://www.opensource.org/licenses/mit-license).

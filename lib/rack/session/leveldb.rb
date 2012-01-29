@@ -14,13 +14,13 @@ module Rack
 
       def initialize(app, options={})
         options = {:db_path => options } if options.is_a? String
-        options = {:cache   => options } if options.is_a? ::LevelDB::DB
+        options = {:db      => options } if options.is_a? ::LevelDB::DB
         super
-        if options[:cache]
-          if options[:cache].kind_of? ::LevelDB::DB
-            @pool = options[:cache]
+        if options[:db]
+          if options[:db].kind_of? ::LevelDB::DB
+            @pool = options[:db]
           else
-            raise ":cache is not LevelDB"
+            raise ":db is not LevelDB"
           end
         else
           @pool = ::LevelDB::DB.new @default_options[:db_path]
@@ -72,12 +72,11 @@ module Rack
         @mutex.unlock if @mutex.locked?
       end
 
-
       def cleanup_expired(time = Time.now)
         return unless @default_options[:expire_after]
         @pool.each do |k, v|
           if k.start_with?(@default_options[:namespace]) and
-              time - Marshal.load(v)[:datetime] > @default_options[:expire_after]
+              time - Marshal.load(v)[:updated_at] > @default_options[:expire_after]
             @pool.delete(k)
           end
         end
@@ -85,7 +84,7 @@ module Rack
 
     private
       def _put(sid, session)
-        @pool.put(_key(sid), Marshal.dump({:data => session, :datetime => Time.now}))
+        @pool.put(_key(sid), Marshal.dump({:data => session, :updated_at => Time.now.utc}))
       end
 
       def _get(sid)
